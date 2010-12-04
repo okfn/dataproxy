@@ -1,0 +1,10 @@
+
+include doc/index.txt
+include doc/Makefile
+include doc/source/*.rst
+include doc/source/conf.py
+include test/*
+include example/*
+include ez_setup.py
+include CHANGELOG.txt
+include LICENSE.txt
