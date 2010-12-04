@@ -17,6 +17,21 @@ $('#list').click(function(e) {
     });
 });
 
+
+var render_data = function(link, data) {
+    var content = '<table>';
+    for (var i=0; i<data.response.length; i++) { 
+        content += '<tr>';
+        for (var j=0; j<data.response[i].length; j++) { 
+             content += '<td>'+data.response[i][j]+'</td>';
+        }
+        content += '</tr>';
+    }
+    content += '</table>'
+    link.after(content)
+}
+
+
 // Render a list of packages to the results <div>
 
 var render_results = function(packages) {
@@ -38,7 +53,7 @@ var render_results = function(packages) {
                                 var urls = '';
                                 for (var j=0; j<data[name].length; j++) {
                                     urls += '<a href="'+data[name][j]['url']+'">';
-                                    urls += data[name][j]['url']+'</a>';
+                                    urls += data[name][j]['url']+'</a> ';
                                 }
                                 output += name+': '+urls+'<br />';
                             } else {
@@ -48,6 +63,29 @@ var render_results = function(packages) {
                     }
                     output += '</p>'
                     $('#result').html(output);
+                    $('#result a').each(function(){
+                        var link = $(this);
+                        link.click(function(e){
+                            e.preventDefault();
+                            $.ajax({
+                                url: 'http://1.latest.jsonpdataproxy.appspot.com/',
+                                type: 'GET',
+                                data: {'url': link.attr('href')},
+                                success: function(data){
+                                    if (data['error'] !== undefined){
+                                        alert(data.error.title);
+                                    } else {
+                                        render_data(link, data);
+                                    }
+                                },
+                                error: function() {
+                                    alert('Failed to get spreadsheet data.')
+                                },
+                                dataType: 'jsonp',
+                                jsonpCallback: 'callback'
+                            });
+                        })
+                    })
                 },
                 error: function() {
                     alert('Failed to search the packages.');

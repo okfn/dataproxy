@@ -1,0 +1,50 @@
+<!DOCTYPE html 
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+<head>
+<title>API Examples</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script type="text/javascript" 
+    src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js">
+</script>
+</head>
+<body>
+    <h1>Dynamic Data Table via a Proxy</h1>
+    <div id="result"></div>
+    <script type="text/javascript">
+        $.ajax({
+            url: 'http://1.latest.jsonpdataproxy.appspot.com/',
+            type: 'GET',
+            data: {
+                'url': 'http://research.dwp.gov.uk/asd/asd4/r1_values.xls',
+                'sheet': '1',
+            },
+            success: function(data){
+                if (data['error'] !== undefined){
+                    alert(data.error.title);
+                } else {
+                    var content = '<table>';
+                    for (var i=0; i<data.response.length; i++) { 
+                        content += '<tr>';
+                        for (var j=0; j<data.response[i].length; j++) { 
+                             content += '<td>'+data.response[i][j]+'</td>';
+                        }
+                        content += '</tr>';
+                    }
+                    content += '</table>'
+                    $('#result').html(content);
+                }
+            },
+            error: function() {
+                alert('Failed to get spreadsheet data.')
+            },
+            dataType: 'jsonp',
+            jsonpCallback: 'callback'
+        });
+    </script>
+</body>
+</html>
+
+
+
