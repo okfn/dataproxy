@@ -1,4 +1,4 @@
-"""Data Proxy - XLS transformation adapter"""
+"""Data Proxy - CSV transformation adapter"""
 import urllib2
 import csv
 
@@ -9,12 +9,13 @@ except ImportError:
 
 def transform(flow, url, query):
     handle = urllib2.urlopen(url)
-
     reader = csv.reader(handle)
 
     rows = []
     for row in reader:
         rows.append(row)
+
+    handle.close
 
     result = {
                 "header": {
