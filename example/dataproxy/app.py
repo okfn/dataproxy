@@ -4,6 +4,19 @@ Data Proxy
 Author: James Gardner <http://jimmyg.org>
 Author: Stefan Urbanek <stefan.urbanek@gmail.com>
 
+Transformation modules
+======================
+
+For each resource type there should be a module in transform/<type>_transform.py
+
+Each module should implement ``transform(flow, url, query)`` and should return a dictionary
+as a result.
+
+Existing modules:
+* transform/csv_transform - CSV files
+* transform/xls_transform - Excel XLS files
+
+
 Random notes
 ============
 
@@ -46,6 +59,9 @@ import logging
 import httplib
 import urlparse
 import urllib2
+import re
+
+import transform
 
 from cgi import FieldStorage
 from StringIO import StringIO
@@ -53,7 +69,7 @@ try:
     import json
 except ImportError:
     import simplejson as json
-import xlrd
+
 from bn import AttributeDict
 
 log = logging.getLogger(__name__)
@@ -167,18 +183,19 @@ class JsonpDataProxy(object):
 
         if not resource_type:
             title = 'Could not determine the file type'
-            msg = 'Please ensure URLs have a .csv or .xls extension'
+            msg = 'If file has no type extension, specify file type in type= option'
             flow.http_response.status = '200 Error %s'%title 
             flow.http_response.body = error(title=title, msg=msg)
             return
 
-        resource_type = resource_type.lower()
+        resource_type = re.sub(r'^\.', '', resource_type.lower())
 
-        if not resource_type in ['csv', 'xls']:
-            title = 'Unsupported file type'
-            msg = 'Please ensure that file type is .csv or .xls extension '\
-                    '(as file extension or as type= option)'
-            flow.http_response.status = '200 Error %s'%title 
+        try:
+            trans_module = transform.type_transformation_module(resource_type)
+        except:
+            title = 'Resource type not supported'
+            msg = 'Transformation of resource of type %s is not supported' % resource_type
+            flow.http_response.status = '200 Error %s' % title 
             flow.http_response.body = error(title=title, msg=msg)
             return
 
@@ -216,55 +233,14 @@ class JsonpDataProxy(object):
             flow.http_response.body = error(title=title, msg=msg)
             return
             
-        if resource_type == 'xls':
-            self.transform_xls(flow, url, query)
-            # elif resource_type == 'csv':
-            #     transform_csv(flow, url, query)
-        else:
-            title = 'Resource type not supported'
-            msg = 'Transformation of resource of type %s is not supported' % resource_type
-            flow.http_response.status = '200 Error %s' % title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-        
-    def transform_xls(self, flow, url, query):
-        handle = urllib2.urlopen(url)
-        resource_content = handle.read()
-        handle.close()
-
-        sheet_name = ''
-        if flow.query.has_key('sheet'):
-            sheet_number = int(flow.query.getfirst('sheet'))
-        else:
-            sheet_number = 0
-
-        book = xlrd.open_workbook('file', file_contents=resource_content, verbosity=0)
-        names = []
-        for sheet_name in book.sheet_names():
-            names.append(sheet_name)
-        rows = []
-        sheet = book.sheet_by_name(names[sheet_number])
-        for rownum in range(sheet.nrows):
-            vals = sheet.row_values(rownum)
-            rows.append(vals)
+        result = trans_module.transform(flow, url, query)
 
         indent=None
 
-        if flow.query.has_key('indent'):
-            indent=int(flow.query.getfirst('indent'))
+        if query.has_key('indent'):
+            indent=int(query.getfirst('indent'))
 
-        flow.http_response.body = json.dumps(
-            dict(
-                header=dict(
-                    url=url,
-                    # length=length,
-                    sheet_name=sheet_name,
-                    sheet_number=sheet_number,
-                ),
-                response=rows,
-            ),
-            indent=indent,
-        )
+        flow.http_response.body = json.dumps(result, indent=indent)
 
 if __name__ == '__main__':
     from wsgiref.util import setup_testing_defaults
