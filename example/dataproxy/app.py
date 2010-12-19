@@ -92,20 +92,16 @@ def get_resource_length(server, path):
     return int(length)
 
 def render(**vars):
-    return ["""
-    <html>
-    <head>
-        <title>%(title)s</title>
-    </head>
-    <body>
-    <h1>%(title)s</h1>
-    
-    <p>%(msg)s</p>
-    
-    </body>
-    </html>
-    """%vars
-]
+    return ["<html>\n"
+        "<head>"
+        "  <title>%(title)s</title>"
+        "</head>\n"
+        "<body>\n"
+        "  <h1>%(title)s</h1>\n"
+        "  <p>%(msg)s</p>\n"
+        "</body>\n"
+        "</html>\n" %vars
+    ]
 
 def error(**vars):
     return json.dumps(dict(error=vars), indent=4)
@@ -159,7 +155,10 @@ class JsonpDataProxy(object):
         elif format == 'json':
             return [resp]
         else:
-            raise Exception('Unknown format %s'%format)
+            title = 'Unknown reply format'
+            msg = 'Reply format %s is not supported, try json or jsonp' % format
+            flow.http_response.status = '200 Error %s' % title 
+            return error(title=title, msg=msg)
 
     def index(self, flow):
         if not flow.query.has_key('url'):
