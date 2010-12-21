@@ -1,37 +1,16 @@
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
+from setuptools import setup, find_packages
 
 import sys, os
 
 version = '0.1.0'
+sys.path.insert(0, 'dataproxy')
 
-def read(*rnames):
-    return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
-
-long_description = (
-    "jsonpdataproxy\n"
-    "++++++++++++++\n\n"
-    ".. contents :: \n"
-    "\n"+read('doc/index.txt')
-    + '\n'
-    + read('CHANGELOG.txt')
-    + '\n'
-    'License\n'
-    '=======\n'
-    + read('LICENSE.txt')
-    + '\n'
-    'Download\n'
-    '========\n'
-)
+from app import __doc__ as long_description
 
 setup(
     name='jsonpdataproxy',
     version=version,
-    description="An example package",
+    description="A JSONP dataproxy",
     long_description=long_description,
     # Get classifiers from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -41,9 +20,9 @@ setup(
         'Programming Language :: Python',
     ],
     keywords='',
-    author='James Gardner',
-    author_email='james@<package hompage URL>',
-    url='http://jimmyg.org/work/code/jsonpdataproxy/index.html',
+    author='James Gardner, Stefan Urbanek, Rufus Pollock',
+    author_email='ckan@okfn.org',
+    url='http://ckan.org/wiki/Extensions',
     license='GNU AGPLv3',
     packages=find_packages(exclude=['ez_setup', 'example', 'test']),
     include_package_data=True,

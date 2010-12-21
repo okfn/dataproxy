@@ -1,4 +1,0 @@
-Manual
-++++++
-
-Not written yet.
