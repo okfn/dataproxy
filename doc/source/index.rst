@@ -1,7 +1,23 @@
-0.1.0
-+++++
+Data Proxy
+++++++++++
 
-.. include :: ../index.txt
+Data Proxy is a web service for converting data resources into structured form such as json.
+
+Supported resource/file types (``type=`` parameter or file extension):
+
++--------------------+---------------------------------------------+
+| Type               | Description                                 |
++====================+=============================================+
+| csv                | Comma separated values text file|           |
++--------------------+---------------------------------------------+
+| xls                | Microsoft Excel Spreadsheet     |           |
++--------------------+---------------------------------------------+
+
+Supported reply format (``format=`` parameter) types:
+
+* json
+* jsonp (default)
+
 
 Documentation
 =============
@@ -9,7 +25,6 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   manual
    api
 
 Indices and tables
