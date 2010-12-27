@@ -191,9 +191,10 @@ class JsonpDataProxy(object):
 
         try:
             trans_module = transform.type_transformation_module(resource_type)
-        except:
+        except Exception as e:
             title = 'Resource type not supported'
-            msg = 'Transformation of resource of type %s is not supported' % resource_type
+            msg = 'Transformation of resource of type %s is not supported. Reason: %s' \
+                            % (resource_type, e)
             flow.http_response.status = '200 Error %s' % title 
             flow.http_response.body = error(title=title, msg=msg)
             return
@@ -232,7 +233,16 @@ class JsonpDataProxy(object):
             flow.http_response.body = error(title=title, msg=msg)
             return
             
-        result = trans_module.transform(flow, url, query)
+        try:
+            result = trans_module.transform(flow, url, query)
+        except Exception as e:
+            title = "Data Transformation Error"
+            msg = "Data transformation failed. Reason: %s" % e
+            # print "ERROR: %s" % e
+            flow.http_response.status = '200 %s' % title
+            flow.http_response.body = error(title=title, msg=msg)
+            return
+            
 
         indent=None
 

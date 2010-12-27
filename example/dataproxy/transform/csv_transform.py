@@ -11,9 +11,18 @@ def transform(flow, url, query):
     handle = urllib2.urlopen(url)
     reader = csv.reader(handle)
 
+    try:
+        max_results = int(query.getfirst("max-results"))
+    except:
+        raise ValueError("max-results should be an integer")
+
     rows = []
+    result_count = 0
     for row in reader:
         rows.append(row)
+        result_count += 1
+        if max_results and result_count >= max_results:
+            break
 
     handle.close
 
@@ -23,6 +32,8 @@ def transform(flow, url, query):
                 },
                 "response": rows
               }
+    if max_results:
+        result["max_results"] = max_results
     
     return result
 
