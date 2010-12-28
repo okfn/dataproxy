@@ -15,4 +15,5 @@ dist/
 data/
 doc/build/
 example/google_appengine
+google_appengine
 

@@ -1,5 +1,4 @@
-"""
-Data Proxy
+"""Data Proxy: a google app-engine application for proxying data to json (jsonp) format.
 
 Author: James Gardner <http://jimmyg.org>
 Author: Stefan Urbanek <stefan.urbanek@gmail.com>
