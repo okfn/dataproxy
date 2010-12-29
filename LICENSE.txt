@@ -1,5 +1,4 @@
-jsonpdataproxy - An example package
-Copyright (C) 2009 James Gardner
+Copyright (C) 2010-2011 Open Knowledge Foundation
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
