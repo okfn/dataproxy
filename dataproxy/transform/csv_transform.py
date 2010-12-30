@@ -8,8 +8,6 @@ try:
 except ImportError:
     import simplejson as json
 
-requires_size_limit = False
-
 def transformer(flow, url, query):
     return CSVTransformer(flow, url, query)
         

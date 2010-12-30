@@ -74,36 +74,42 @@ from bn import AttributeDict
 
 log = logging.getLogger(__name__)
 
-def get_resource_length(server, path, required = False):
+def get_resource_length(url, required = False, follow = False):
     """Get length of a resource"""
-    # title = 'Could not fetch file'
-    #     msg = 'Unable to get resource length. Reason: %s' % e
-    #     flow.http_response.status = '200 Error %s'%title 
-    #     flow.http_response.body = error(title=title, message=msg)
-    #     
-    connection = httplib.HTTPConnection(server)
+
+    parts = urlparse.urlparse(url)
+
+    connection = httplib.HTTPConnection(parts.netloc)
 
     try:
-        connection.request("HEAD", path)
+        connection.request("HEAD", parts.path)
     except Exception, e:
         raise ResourceError("Unable to access resource", "Unable to access resource. Reason: %s" % e)
 
     res = connection.getresponse()
+    
+    headers = {}
+    for header, value in res.getheaders():
+        headers[header.lower()] = value
+    
+    # Redirect?
+    if res.status == 302 and follow:
+        if "location" not in headers:
+            raise ResourceError("Resource moved, but no Location provided by resource server", 
+                                    'Resource %s moved, but no Location provided by resource server: %s' 
+                                    % (parts.path, parts.netloc))
+            
+        return get_resource_length(headers["location"], required = required, follow = False)
+        
 
-    headers = res.getheaders()
-    length = None
+    if 'content-length' in headers:
+        length = int(headers['content-length'])
+        return length
 
-    for header, value in headers:
-        if header.lower() == 'content-length':
-            length = value
-            break
-
-    if length:
-        return int(length)
-
-    if not length and required:
+    if required:
         raise ResourceError("Unable to get content length", 
-                                'No content-length returned for server: %s path: %s' % (server, path))
+                                'No content-length returned for server: %s path: %s' 
+                                % (parts.netloc, parts.path))
     return None
 
 def render(**vars):
@@ -168,7 +174,9 @@ class JsonpDataProxy(object):
         flow['http_response'] = HTTPResponseMarble()
         flow.http_response.header_list = [dict(name='Content-Type', value='application/javascript')]
         flow['query'] = FieldStorage(environ=flow.environ)
+
         self.index(flow)
+
         start_response(
             str(flow.http_response.status),
             [tuple([item['name'], item['value']]) for item in flow.http_response.header_list],
@@ -234,8 +242,7 @@ class JsonpDataProxy(object):
             raise RequestError('Resource type not supported', 
                                 'Transformation of resource of type %s is not supported. Reason: %s'
                                   % (resource_type, e))
-            
-        length = get_resource_length(parts.netloc, parts.path, transformer.requires_size_limit)
+        length = get_resource_length(url, transformer.requires_size_limit, follow = True)
 
         log.debug('The file at %s has length %s', url, length)
         

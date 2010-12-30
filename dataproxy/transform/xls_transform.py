@@ -8,8 +8,6 @@ try:
 except ImportError:
     import simplejson as json
 
-requires_size_limit = True
-
 def transformer(flow, url, query):
     return XLSTransformer(flow, url, query)
         
