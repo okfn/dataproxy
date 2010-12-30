@@ -1,39 +1,47 @@
 """Data Proxy - CSV transformation adapter"""
 import urllib2
 import csv
+import transform
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-def transform(flow, url, query):
-    handle = urllib2.urlopen(url)
-    reader = csv.reader(handle)
+requires_size_limit = False
 
-    try:
-        max_results = int(query.getfirst("max-results"))
-    except:
-        raise ValueError("max-results should be an integer")
+def transformer(flow, url, query):
+    return CSVTransformer(flow, url, query)
+        
+class CSVTransformer(transform.Transformer):
+    def __init__(self, flow, url, query):
+        super(CSVTransformer, self).__init__(flow, url, query)
+        self.requires_size_limit = False
+        
+    def transform(self):
+        handle = urllib2.urlopen(self.url)
+        reader = csv.reader(handle)
 
-    rows = []
-    result_count = 0
-    for row in reader:
-        rows.append(row)
-        result_count += 1
-        if max_results and result_count >= max_results:
-            break
+        rows = []
+        result_count = 0
+        
+        for row in reader:
+            rows.append(row)
+            result_count += 1
+            if self.max_results and result_count >= self.max_results:
+                break
 
-    handle.close
+        handle.close()
 
-    result = {
-                "header": {
-                    "url": url,
-                },
-                "response": rows
-              }
-    if max_results:
-        result["max_results"] = max_results
+        result = {
+                    "header": {
+                        "url": self.url,
+                    },
+                    "response": rows
+                  }
+
+        if self.max_results:
+            result["max_results"] = max_results
     
-    return result
+        return result
 

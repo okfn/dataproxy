@@ -8,8 +8,9 @@ Transformation modules
 
 For each resource type there should be a module in transform/<type>_transform.py
 
-Each module should implement ``transform(flow, url, query)`` and should return a dictionary
-as a result.
+Each module should implement:
+* ``transformer(flow, url, query)``, should return a Transformer subclass
+* Transformer subclass with __init__(flow, url, query)
 
 Existing modules:
 * transform/csv_transform - CSV files
@@ -73,22 +74,37 @@ from bn import AttributeDict
 
 log = logging.getLogger(__name__)
 
-def get_resource_length(server, path):
+def get_resource_length(server, path, required = False):
     """Get length of a resource"""
-    
-    conn = httplib.HTTPConnection(server)
-    conn.request("HEAD", path)
-    res = conn.getresponse()
+    # title = 'Could not fetch file'
+    #     msg = 'Unable to get resource length. Reason: %s' % e
+    #     flow.http_response.status = '200 Error %s'%title 
+    #     flow.http_response.body = error(title=title, message=msg)
+    #     
+    connection = httplib.HTTPConnection(server)
+
+    try:
+        connection.request("HEAD", path)
+    except Exception, e:
+        raise ResourceError("Unable to access resource", "Unable to access resource. Reason: %s" % e)
+
+    res = connection.getresponse()
 
     headers = res.getheaders()
     length = None
-    for k, v in headers:
-        if k.lower() == 'content-length':
-            length = v
+
+    for header, value in headers:
+        if header.lower() == 'content-length':
+            length = value
             break
-    if not length:
-        raise Exception('No content-length returned for % server %r path'%(server, path))
-    return int(length)
+
+    if length:
+        return int(length)
+
+    if not length and required:
+        raise ResourceError("Unable to get content length", 
+                                'No content-length returned for server: %s path: %s' % (server, path))
+    return None
 
 def render(**vars):
     return ["<html>\n"
@@ -104,6 +120,23 @@ def render(**vars):
 
 def error(**vars):
     return json.dumps(dict(error=vars), indent=4)
+
+class ProxyError(StandardError):
+    def __init__(self, title, message):
+        super(ProxyError, self).__init__()
+        self.title = title
+        self.message = message
+        self.error = "Error"
+        
+class ResourceError(ProxyError):
+    def __init__(self, title, message):
+        super(ResourceError, self).__init__(title, message)
+        self.error = "Resource Error"
+
+class RequestError(ProxyError):
+    def __init__(self, title, message):
+        super(RequestError, self).__init__(title, message)
+        self.error = "Request Error"
 
 class HTTPResponseMarble(object):
     def __init__(self, *k, **p):
@@ -157,17 +190,23 @@ class JsonpDataProxy(object):
             title = 'Unknown reply format'
             msg = 'Reply format %s is not supported, try json or jsonp' % format
             flow.http_response.status = '200 Error %s' % title 
-            return error(title=title, msg=msg)
+            return error(title=title, message=msg)
 
     def index(self, flow):
         if not flow.query.has_key('url'):
-            title = 'No url= option found'
-            msg = 'Please read the API format docs'
+            title = 'url query parameter missing'
+            msg = 'Please read the dataproxy API format documentation'
             flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
+            flow.http_response.body = error(title=title, message=msg)
         else:
             url = flow.query.getfirst('url')
-            self.proxy_query(flow, url, flow.query)
+            
+            try:
+                self.proxy_query(flow, url, flow.query)
+            except ProxyError, e:
+                flow.http_response.status = '200 %s %s' % (e.error, e.title)
+                flow.http_response.body = error(title=e.title, message=e.message)
+                
 
     def proxy_query(self, flow, url, query):
         parts = urlparse.urlparse(url)
@@ -175,76 +214,48 @@ class JsonpDataProxy(object):
         # Get resource type - first try to see whether there is type= URL option, 
         # if there is not, try to get it from file extension
         
+        if parts.scheme != 'http':
+            raise ResourceError('Only HTTP URLs are supported', 
+                                'Data proxy does not support %s URLs' % parts.scheme)
+
         resource_type = query.getfirst("type")
         if not resource_type:
             resource_type = os.path.splitext(parts.path)[1]
 
         if not resource_type:
-            title = 'Could not determine the file type'
-            msg = 'If file has no type extension, specify file type in type= option'
-            flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
+            raise RequestError('Could not determine the resource type', 
+                                'If file has no type extension, specify file type in type= option')
 
         resource_type = re.sub(r'^\.', '', resource_type.lower())
 
         try:
-            trans_module = transform.type_transformation_module(resource_type)
-        except Exception as e:
-            title = 'Resource type not supported'
-            msg = 'Transformation of resource of type %s is not supported. Reason: %s' \
-                            % (resource_type, e)
-            flow.http_response.status = '200 Error %s' % title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
+            transformer = transform.transformer(resource_type, flow, url, query)
+        except Exception, e:
+            raise RequestError('Resource type not supported', 
+                                'Transformation of resource of type %s is not supported. Reason: %s'
+                                  % (resource_type, e))
+            
+        length = get_resource_length(parts.netloc, parts.path, transformer.requires_size_limit)
 
-        if parts.scheme != 'http':
-            title = 'Only http is allowed'
-            msg = 'We do not support %s URLs'%urlparts.scheme
-            flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-            
-        try:
-            length = get_resource_length(parts.netloc, parts.path)
-        except:
-            title = 'Could not fetch file'
-            msg = 'Is the URL correct? Does the server exist?'
-            flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-            
         log.debug('The file at %s has length %s', url, length)
         
-        if length is None:
-            title = 'The server hosting the file would not tell us its size'
-            msg = 'We will not proxy this file because we don\'t know its length'
-            flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-        elif length > flow.app.config.proxy.max_length:
-            title = 'The requested file is too big to proxy'
-            msg = 'Sorry, but your file is %s bytes, over our %s byte limit. If we proxy large files we\'ll use up all our bandwidth'%(
-                length, 
-                flow.app.config.proxy.max_length,
-            )
-            flow.http_response.status = '200 Error %s'%title 
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-            
+        max_length = flow.app.config.proxy.max_length
+
+        if length and transformer.requires_size_limit and length > max_length:
+            raise ResourceError('The requested file is too big to proxy',
+                                'Requested resource is %s bytes. Size limit is %s. '
+                                'If we proxy large files we\'ll use up all our bandwidth'
+                                % (length, max_length))
+
+        result = transformer.transform()
         try:
-            result = trans_module.transform(flow, url, query)
-        except Exception as e:
-            title = "Data Transformation Error"
-            msg = "Data transformation failed. Reason: %s" % e
-            # print "ERROR: %s" % e
-            flow.http_response.status = '200 %s' % title
-            flow.http_response.body = error(title=title, msg=msg)
-            return
-            
-
+            result = transformer.transform()
+        except Exception, e:
+            log.debug('Transformation of %s failed. Reason: %s', url, e)
+            raise ResourceError("Data Transformation Error",
+                                "Data transformation failed. Reason: %s" % e)
         indent=None
-
+        
         if query.has_key('indent'):
             indent=int(query.getfirst('indent'))
 

@@ -26,6 +26,15 @@ Parameters
 |                    | ``jsonp`` are supported                    |
 +--------------------+--------------------------------------------+
 
+XLS Parameters:
+
++--------------------+--------------------------------------------+
+| Parameter          | Description                                |
++====================+============================================+
+| ``worksheet``      | Worksheet number                           |
++--------------------+--------------------------------------------+
+
+
 Get whole file as json::
 
     DATA_PROXY_URL?url=http://democracyfarm.org/f/ckan/foo.csv&format=json

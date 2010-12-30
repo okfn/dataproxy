@@ -1,53 +1,60 @@
 """Data Proxy - XLS transformation adapter"""
 import urllib2
 import xlrd
+import transform
+
 try:
     import json
 except ImportError:
     import simplejson as json
 
-def transform(flow, url, query):
-    handle = urllib2.urlopen(url)
-    resource_content = handle.read()
-    handle.close()
+requires_size_limit = True
 
-    try:
-        max_results = int(query.getfirst("max-results"))
-    except:
-        raise ValueError("max-results should be an integer")
+def transformer(flow, url, query):
+    return XLSTransformer(flow, url, query)
+        
+class XLSTransformer(transform.Transformer):
+    def __init__(self, flow, url, query):
+        super(XLSTransformer, self).__init__(flow, url, query)
 
-    sheet_name = ''
-    if flow.query.has_key('sheet'):
-        sheet_number = int(flow.query.getfirst('sheet'))
-    else:
-        sheet_number = 0
+        if 'worksheet' in self.query:
+            self.sheet_number = int(self.query.getfirst('worksheet'))
+        else:
+            self.sheet_number = 0
+        
+    def transform(self):
+        handle = urllib2.urlopen(self.url)
+        resource_content = handle.read()
+        handle.close()
 
-    book = xlrd.open_workbook('file', file_contents=resource_content, verbosity=0)
-    names = []
-    for sheet_name in book.sheet_names():
-        names.append(sheet_name)
-    rows = []
-    sheet = book.sheet_by_name(names[sheet_number])
+        sheet_name = ''
 
-    # Get the rows
-    result_count = 0
-    for rownum in range(sheet.nrows):
-        vals = sheet.row_values(rownum)
-        rows.append(vals)
-        result_count += 1
-        if max_results and result_count >= max_results:
-            break
+        book = xlrd.open_workbook('file', file_contents=resource_content, verbosity=0)
+        names = []
+        for sheet_name in book.sheet_names():
+            names.append(sheet_name)
+        rows = []
+        sheet = book.sheet_by_name(names[self.sheet_number])
 
-    result = {
-                "header": {
-                    "url": url,
-                    "sheet_name": sheet_name,
-                    "sheet_number": sheet_number,
-                },
-                "response": rows
-              }
-    if max_results:
-        result["max_results"] = max_results
+        # Get the rows
+        result_count = 0
+        for rownum in range(sheet.nrows):
+            vals = sheet.row_values(rownum)
+            rows.append(vals)
+            result_count += 1
+            if self.max_results and result_count >= self.max_results:
+                break
+
+        result = {
+                    "header": {
+                        "url": self.url,
+                        "worksheet_name": sheet_name,
+                        "worksheet_number": self.sheet_number,
+                    },
+                    "response": rows
+                  }
+        if self.max_results:
+            result["max_results"] = self.max_results
     
-    return result
+        return result
 
