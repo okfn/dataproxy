@@ -39,7 +39,7 @@ class CSVTransformer(transform.Transformer):
                   }
 
         if self.max_results:
-            result["max_results"] = max_results
+            result["max_results"] = self.max_results
     
         return result
 
