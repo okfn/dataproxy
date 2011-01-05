@@ -95,8 +95,15 @@ jQuery('document').ready(function($) {
   var type = $.url.param('type');
   $('#resource-url').val(url);
   $('#resource-format').val(type);
+
   if(url) {
     $('#form-resource-url').submit();
+  } else {
+    // some demo data
+    url = 'http://www.openeconomics.net/store/thatcher_wages_middle_ages/data';
+    type = 'csv';
+    $('#resource-url').val(url);
+    $('#resource-format').val(type);
   }
 });
   </script>
@@ -119,9 +126,11 @@ jQuery('document').ready(function($) {
 </head>
 <body>
   <h1>Data Proxy Demo</h1>
-  <p>Enter the url to a dataset (csv or excel only at the moment!) hit submit
+  <p>Enter the url to a dataset, hit submit
   and see a preview of it below - with everything done in pure javascript
-  thanks to the jsonp data proxy.</p>
+  thanks to the jsonp data proxy. Note we only support csv or excel only at the
+  moment.
+  </p>
   <form id="form-resource-url">
     <dl>
       <dt>
