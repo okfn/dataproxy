@@ -95,7 +95,9 @@ jQuery('document').ready(function($) {
   var type = $.url.param('type');
   $('#resource-url').val(url);
   $('#resource-format').val(type);
-  $('#form-resource-url').submit();
+  if(url) {
+    $('#form-resource-url').submit();
+  }
 });
   </script>
 <style type="text/css">
@@ -117,7 +119,9 @@ jQuery('document').ready(function($) {
 </head>
 <body>
   <h1>Data Proxy Demo</h1>
-  <p>Enter the url to a dataset (csv or excel only at the moment!) and see a preview of it below.</p>
+  <p>Enter the url to a dataset (csv or excel only at the moment!) hit submit
+  and see a preview of it below - with everything done in pure javascript
+  thanks to the jsonp data proxy.</p>
   <form id="form-resource-url">
     <dl>
       <dt>
