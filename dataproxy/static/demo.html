@@ -1,0 +1,153 @@
+<html>
+<head>
+  <title>Data Proxy Demo</title>
+  <link rel="stylesheet" href="http://assets.okfn.org/themes/witbd/typography.css" media="screen, print" title="Master stylesheet" charset="utf-8" />
+  <link rel="stylesheet" href="https://bitbucket.org/okfn/ckan/raw/tip/ckan/public/css/forms.css" media="screen, print" title="Master stylesheet" charset="utf-8" />
+
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+  <script type="text/javascript" src="http://assets.okfn.org/ext/jquery.url/jquery.url.min.js"></script>
+
+  <script type="text/javascript">
+var thisPageUrl = window.location.href.split('?')[0];
+var baseUrl = 'http://test.ckan.net';
+var dataproxy = 'http://jsonpdataproxy.appspot.com';
+
+function getResourceId(url, callback) {
+  // issue that this search works on partial matches of the url ...
+  apiurl = baseUrl + '/api/search/resource?url=' 
+  $.ajax({
+    url: apiurl + url,
+    dataType: 'jsonp',
+    success: ourCallback
+  });
+  function ourCallback(data) {
+    if(data.count < 1) {
+      var msg = 'There is no resource with that url'; 
+      alert(msg);
+      throw msg;
+    } else {
+      callback(data.results[0]);
+    }
+  }
+}
+function getResourceData(resourceId, callback) {
+  var apiurl = baseUrl + '/api/data/' 
+  $.ajax({
+    url: apiurl + resourceId,
+    dataType: 'jsonp',
+    success: callback
+  });
+}
+
+function getResourceDataDirect(url, type, callback) {
+  var apiurl = dataproxy + '?url=' + url + '&type=' + type;
+  console.log(apiurl);
+  $.ajax({
+    url: apiurl,
+    dataType: 'jsonp',
+    success: callback
+  });
+}
+function showData(data) {
+  if(data.error) {
+    alert('Had an error from dataproxy: ' + data.error.title + '\n(' + data.error.msg + ')');
+    throw 'Bad data';
+  }
+  var heading = $('#data h2 a');
+  heading.html(data.header.url);
+  heading.attr('href', data.header.url); 
+  $('#data h2 a').html(data.header.url);
+  var content = $($('#data table').first());
+  content.html('');
+  for (var i=0; i<data.response.length; i++) { 
+    var row = $('<tr></tr>');
+    for (var j=0; j<data.response[i].length; j++) { 
+      row.append($('<td></td>').html(data.response[i][j]));
+    }
+    content.append(row);
+  }
+}
+
+jQuery('document').ready(function($) {
+  $('#form-resource-url').submit(function(e) {
+    e.preventDefault();
+    var url = $('#resource-url').val()
+    var type = $('#resource-format').val()
+    // getResourceId(url, function(resourceId) {
+    //   getResourceData(resourceId, showData);
+    // });
+    getResourceDataDirect(url, type, showData);
+    var shareUrl = thisPageUrl + '?url=' + url + '&type=' + type;
+    $('#share-link').val(shareUrl);
+  });
+
+  $('#loading')
+    .hide()  // hide it initially
+    .ajaxStart(function() {
+        $(this).show();
+    })
+    .ajaxStop(function() {
+        $(this).hide();
+    })
+  ;
+
+  var url = $.url.param('url');
+  var type = $.url.param('type');
+  $('#resource-url').val(url);
+  $('#resource-format').val(type);
+  $('#form-resource-url').submit();
+});
+  </script>
+<style type="text/css">
+  body {
+    margin: 3em;
+    margin-top: 1em;
+  }
+
+  #share-link {
+    width: 80%;
+    height: 50px;
+  }
+
+  #loading {
+    font-size: 1.5em;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1>Data Proxy Demo</h1>
+  <p>Enter the url to a dataset (csv or excel only at the moment!) and see a preview of it below.</p>
+  <form id="form-resource-url">
+    <dl>
+      <dt>
+        <label for="resource-url">Data URL</label>
+      </dt>
+      <dd>
+        <input id="resource-url" type="text" name="resource-url" />
+      </dd>
+      <dt>
+        <label for="resource-url">Format (optional)</label>
+      </dt>
+      <dd>
+        <input id="resource-format" type="text" name="resource-format" />
+      </dd>
+      <dd class="instructions">
+        e.g. csv, xls - only needed if not clear from url
+      </dd>
+      <dt></dt>
+      <dd>
+        <input type="submit" value="View Data" />
+      </dd>
+    </dl>
+    <p>Share link (copy and paste this to share this preview with others):</p>
+    <textarea id="share-link"></textarea>
+  </form>
+  <div id="data">
+    <div id="loading">Loading data, please wait ...</div>
+    <h2><a href=""></a></h2>
+    <table class="data">
+    </table>
+  </div>
+</body>
+</html>
