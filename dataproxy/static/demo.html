@@ -41,7 +41,6 @@ function getResourceData(resourceId, callback) {
 
 function getResourceDataDirect(url, type, callback) {
   var apiurl = dataproxy + '?url=' + url + '&type=' + type;
-  console.log(apiurl);
   $.ajax({
     url: apiurl,
     dataType: 'jsonp',
