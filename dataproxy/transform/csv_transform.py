@@ -1,17 +1,14 @@
 """Data Proxy - CSV transformation adapter"""
 import urllib2
 import csv
-import transform
+import base
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-def transformer(flow, url, query):
-    return CSVTransformer(flow, url, query)
-        
-class CSVTransformer(transform.Transformer):
+class CSVTransformer(base.Transformer):
     def __init__(self, flow, url, query):
         super(CSVTransformer, self).__init__(flow, url, query)
         self.requires_size_limit = False

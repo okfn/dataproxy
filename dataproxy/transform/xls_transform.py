@@ -1,17 +1,14 @@
 """Data Proxy - XLS transformation adapter"""
 import urllib2
 import xlrd
-import transform
+import base
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-def transformer(flow, url, query):
-    return XLSTransformer(flow, url, query)
-        
-class XLSTransformer(transform.Transformer):
+class XLSTransformer(base.Transformer):
     def __init__(self, flow, url, query):
         super(XLSTransformer, self).__init__(flow, url, query)
 
