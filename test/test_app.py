@@ -1,6 +1,7 @@
 from webtest import TestApp
 from dataproxy.app import JsonpDataProxy
 import re
+import json
 
 class TestDataProxy(object):
     def setup(self):
@@ -15,6 +16,12 @@ class TestDataProxy(object):
                 "no_type": "url=http://foo.com/foo",
                  "unknown_type": "url=http://foo.com/foo.undefined",
                  "valid_csv": "url=http://democracyfarm.org/f/ckan/foo.csv",
+                 "valid_csv_limit": {
+                            "url": "http://democracyfarm.org/f/ckan/foo.csv",
+                            "max-results": 3,
+                            "format": "json"
+                            },
+                 "csv_json": "url=http://democracyfarm.org/f/ckan/foo.csv&format=json",
                  "valid_xls": "url=http://democracyfarm.org/f/ckan/foo.xls",
                  "untyped_csv": {
                         "url": "http://openeconomics.net/store/8d7d4770-e1d1-11db-9f7e-00145101c316/data",
@@ -22,17 +29,17 @@ class TestDataProxy(object):
                     },
                  "redirect_csv": "url=http://www.archive.org/download/ckan-cofog/cofog.csv"
                 }
-        
     def get(self, request_name):
         request = self.requests[request_name]
+        
         if type(request) == str:
             request_str = request
         else:
             pairs = ["%s=%s" % item for item in request.items()]
             request_str = "&".join(pairs)
-            
         
         result = self.app.get('/?' + request_str)
+            
         return result
         
     def test_no_params(self):
@@ -59,6 +66,7 @@ class TestDataProxy(object):
     def test_reply(self):
         res = self.get("valid_csv")
         assert self.acceptable_response(res.body), res
+        assert 'callback' in res, res
 
         res = self.get("valid_xls")
         assert self.acceptable_response(res.body), res
@@ -66,6 +74,20 @@ class TestDataProxy(object):
         res = self.get("untyped_csv")
         assert self.acceptable_response(res.body), res
         
+        res = self.get("csv_json")
+        assert self.acceptable_response(res.body), res
+        assert 'callback' not in res, res
+        jres = json.loads(res.body)
+        assert 'header' in jres
+        assert 'response' in jres
+        
     def test_redirect(self):
         res = self.get("redirect_csv")
         assert self.acceptable_response(res.body), res
+
+    def test_data(self):
+        res = self.get("valid_csv_limit")
+        assert self.acceptable_response(res.body), res
+        jres = json.loads(res.body)
+        rows = jres["response"]
+        assert len(rows) == 3, res
