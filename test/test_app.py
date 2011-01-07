@@ -19,7 +19,8 @@ class TestDataProxy(object):
                  "untyped_csv": {
                         "url": "http://openeconomics.net/store/8d7d4770-e1d1-11db-9f7e-00145101c316/data",
                         "type": "csv"
-                    }
+                    },
+                 "redirect_csv": "url=http://www.archive.org/download/ckan-cofog/cofog.csv"
                 }
         
     def get(self, request_name):
@@ -65,3 +66,6 @@ class TestDataProxy(object):
         res = self.get("untyped_csv")
         assert self.acceptable_response(res.body), res
         
+    def test_redirect(self):
+        res = self.get("redirect_csv")
+        assert self.acceptable_response(res.body), res
