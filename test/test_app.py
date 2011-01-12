@@ -2,11 +2,15 @@ from webtest import TestApp
 from dataproxy.app import JsonpDataProxy
 import re
 import json
+import os
+import sys
+
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'dataproxy'))
 
 class TestDataProxy(object):
     def setup(self):
         """Setup DataProxy tests"""
-        
+
         # Create application
         self.wsgiapp = JsonpDataProxy(100000)
         self.app = TestApp(self.wsgiapp) 
@@ -48,7 +52,7 @@ class TestDataProxy(object):
         assert 'url query parameter missing' in res, res
 
     def acceptable_response(self, body):
-        return re.search('"response": \[\[.*\]\]', body)
+        return re.search('"data": \[\[.*\]\]', body)
         
     def test_resource_type_support(self):
         res = self.get("no_type")
@@ -78,8 +82,8 @@ class TestDataProxy(object):
         assert self.acceptable_response(res.body), res
         assert 'callback' not in res, res
         jres = json.loads(res.body)
-        assert 'header' in jres
-        assert 'response' in jres
+        assert 'data' in jres
+        assert 'url' in jres
         
     def test_redirect(self):
         res = self.get("redirect_csv")
@@ -89,5 +93,5 @@ class TestDataProxy(object):
         res = self.get("valid_csv_limit")
         assert self.acceptable_response(res.body), res
         jres = json.loads(res.body)
-        rows = jres["response"]
+        rows = jres["data"]
         assert len(rows) == 3, res

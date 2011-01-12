@@ -2,6 +2,7 @@
 import urllib2
 import csv
 import base
+import brewery.ds as ds
 
 try:
     import json
@@ -12,31 +13,25 @@ class CSVTransformer(base.Transformer):
     def __init__(self, flow, url, query):
         super(CSVTransformer, self).__init__(flow, url, query)
         self.requires_size_limit = False
+
+        if 'encoding' in self.query:
+            self.encoding = self.query["encoding"]
+        else:
+            self.encoding = 'utf-8'
+
+        if 'dialect' in self.query:
+            self.dialect = self.query["dialect"]
+        else:
+            self.dialect = None
         
     def transform(self):
         handle = urllib2.urlopen(self.url)
-        reader = csv.reader(handle)
 
-        rows = []
-        result_count = 0
+        src = ds.CSVDataSource(handle, encoding = self.encoding, dialect = self.dialect)
+        src.initialize()
         
-        for row in reader:
-            rows.append(row)
-            result_count += 1
-            if self.max_results and result_count >= self.max_results:
-                break
-
+        result = self.read_source_rows(src)
         handle.close()
-
-        result = {
-                    "header": {
-                        "url": self.url,
-                    },
-                    "response": rows
-                  }
-
-        if self.max_results:
-            result["max_results"] = self.max_results
-    
+        
         return result
 

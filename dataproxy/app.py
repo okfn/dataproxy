@@ -61,14 +61,28 @@ import urlparse
 import urllib2
 import re
 
-import transform
-
 from cgi import FieldStorage
 from StringIO import StringIO
 try:
     import json
 except ImportError:
     import simplejson as json
+
+import sys
+import os
+
+def _add_vendor_packages():
+    root = os.path.join(os.path.dirname(__file__), 'vendor')
+    for vendor_package in os.listdir(root):
+        path = os.path.join(root, vendor_package)
+        if path in sys.path:
+            continue
+        sys.path.insert(1, path)
+        # m = "adding %s to the sys.path: %s" % (vendor_package, sys.path)
+
+_add_vendor_packages()
+
+import transform
 
 from bn import AttributeDict
 
@@ -254,7 +268,6 @@ class JsonpDataProxy(object):
                                 'If we proxy large files we\'ll use up all our bandwidth'
                                 % (length, max_length))
 
-        result = transformer.transform()
         try:
             result = transformer.transform()
         except Exception, e:
@@ -262,6 +275,9 @@ class JsonpDataProxy(object):
             raise ResourceError("Data Transformation Error",
                                 "Data transformation failed. Reason: %s" % e)
         indent=None
+        
+        result["url"] = url
+        result["length"] = length
         
         if query.has_key('indent'):
             indent=int(query.getfirst('indent'))

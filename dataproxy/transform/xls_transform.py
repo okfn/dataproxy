@@ -2,6 +2,7 @@
 import urllib2
 import xlrd
 import base
+import brewery.ds as ds
 
 try:
     import json
@@ -19,37 +20,12 @@ class XLSTransformer(base.Transformer):
         
     def transform(self):
         handle = urllib2.urlopen(self.url)
-        resource_content = handle.read()
+
+        src = ds.XLSDataSource(handle, sheet = self.sheet_number)
+        src.initialize()
+
+        result = self.read_source_rows(src)
         handle.close()
-
-        sheet_name = ''
-
-        book = xlrd.open_workbook('file', file_contents=resource_content, verbosity=0)
-        names = []
-        for sheet_name in book.sheet_names():
-            names.append(sheet_name)
-        rows = []
-        sheet = book.sheet_by_name(names[self.sheet_number])
-
-        # Get the rows
-        result_count = 0
-        for rownum in range(sheet.nrows):
-            vals = sheet.row_values(rownum)
-            rows.append(vals)
-            result_count += 1
-            if self.max_results and result_count >= self.max_results:
-                break
-
-        result = {
-                    "header": {
-                        "url": self.url,
-                        "worksheet_name": sheet_name,
-                        "worksheet_number": self.sheet_number,
-                    },
-                    "response": rows
-                  }
-        if self.max_results:
-            result["max_results"] = self.max_results
-    
+        
         return result
 

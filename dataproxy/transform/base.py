@@ -1,20 +1,11 @@
 import sys
+import brewery.dq as dq
 
-transformers = [
-    {
-        "name": "xls",
-        "class": "XLSTransformer",
-        "extensions": ["xls"],
-        "mime_types": ["application/excel", "application/vnd.ms-excel"]
-    },
-    {
-        "name": "csv",
-        "class": "CSVTransformer",
-        "extensions": ["csv"],
-        "mime_types": ["text/csv", "text/comma-separated-values"]
-    }
-]
+transformers = []
 
+def register_transformer(transformer):
+    transformers.append(transformer)
+    
 def find_transformer(extension = None, mime_type = None):
     if not extension and not mime_type:
         raise ValueError("Either extension or mime type should be specified")
@@ -27,26 +18,8 @@ def find_transformer(extension = None, mime_type = None):
             info = trans
     if not info:
         return None
-    
-    if "module" in info:
-        module_name = info["module"]
-    else:
-        module_name = "dataproxy.transform.%s_transform" % info["name"]
 
-    if not module_name in sys.modules:
-        raise RuntimeError("Module '%s' for transformer type '%s' does not exist" % 
-                    (module_name, info["name"]) )
-
-    module = sys.modules[module_name]
-    class_name = info["class"]
-    
-    if not class_name in module.__dict__:
-        raise RuntimeError("Class '%s' (in module '%s') for transformer type '%s' does not exist" % 
-                    (class_name, module_name, info["name"]) )
-
-    trans_class = module.__dict__[class_name]
-
-    return trans_class
+    return info["class"]
 
 def transformer(type_name, flow, url, query):
     """Get transformation module for resource of given type"""
@@ -72,3 +45,48 @@ class Transformer(object):
                 self.max_results = int(query.getfirst("max-results"))
             except:
                 raise ValueError("max-results should be an integer")
+
+        if "audit" in query:
+            self.audit = True
+        else:
+            self.audit = False
+
+    def read_source_rows(self, src):
+        if self.audit:
+            stats = {}
+            fields = src.field_names
+            for field in fields:
+                stats[field] = dq.FieldStatistics(field)
+
+        rows = []
+        record_count = 0
+    
+        for row in src.rows():
+            rows.append(row)
+            if self.audit:
+                for i, value in enumerate(row):
+                    stats[fields[i]].probe(value)
+                    
+            record_count += 1
+            if self.max_results and record_count >= self.max_results:
+                break
+
+        if self.audit:
+            audit_dict = {}
+            for key, stat in stats.items():
+                stat.record_count = record_count
+                stat.finalize()
+                audit_dict[key] = stat.dict()
+
+        result = {
+                    "fields": src.field_names,
+                    "data": rows
+                  }
+
+        if self.audit:
+            result["audit"] = audit_dict
+
+        if self.max_results:
+            result["max_results"] = self.max_results
+
+        return result
