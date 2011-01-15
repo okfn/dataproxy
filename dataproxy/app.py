@@ -217,7 +217,7 @@ class JsonpDataProxy(object):
     def index(self, flow):
         if not flow.query.has_key('url'):
             title = 'url query parameter missing'
-            msg = 'Please read the dataproxy API format documentation'
+            msg = 'Please read the dataproxy API format documentation: http://democracyfarm.org/dataproxy/'
             flow.http_response.status = '200 Error %s'%title 
             flow.http_response.body = error(title=title, message=msg)
         else:
