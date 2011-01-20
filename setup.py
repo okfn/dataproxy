@@ -8,9 +8,9 @@ sys.path.insert(0, 'dataproxy')
 from app import __doc__ as long_description
 
 setup(
-    name='jsonpdataproxy',
+    name='dataproxy',
     version=version,
-    description="A JSONP dataproxy",
+    description="A (JSONP) dataproxy",
     long_description=long_description,
     # Get classifiers from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
