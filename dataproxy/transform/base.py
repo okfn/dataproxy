@@ -26,7 +26,7 @@ def transformer(type_name, flow, url, query):
     
     trans_class = find_transformer(extension = type_name)
     if not trans_class:
-        raise Exception("No transofmer for type '%s'" % type_name)
+        raise Exception("No transformer for type '%s'" % type_name)
 
     return trans_class(flow, url, query)
 
