@@ -39,7 +39,7 @@ class Transformer(object):
 
         self.requires_size_limit = True
         
-        self.max_results = None
+        self.max_results = 500
         if "max-results" in query:
             try:
                 self.max_results = int(query.getfirst("max-results"))
