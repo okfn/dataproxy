@@ -19,6 +19,12 @@ Supported reply format (``format=`` parameter) types:
 * jsonp (default)
 
 
+Live Service
+++++++++++++
+
+http://jsonpdataproxy.appspot.com/
+
+
 API Documentation
 +++++++++++++++++
    
@@ -132,7 +138,10 @@ Errors
 +----------------------------------------+----------------------------------------------------+
 
 
+Deployment
+++++++++++
 
+This is a Python google app engine application. Deploy in the usual way.
 
 
 Indices and tables
