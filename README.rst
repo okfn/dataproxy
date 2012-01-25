@@ -145,10 +145,3 @@ Deployment
 
 This is a Python google app engine application. Deploy in the usual way.
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
