@@ -3,6 +3,8 @@ Data Proxy
 
 Data Proxy is a web service for converting data resources into structured form such as json.
 
+.. image:: http://packages.python.org/dataproxy/_images/data_proxy.png
+
 Supported resource/file types (``type=`` parameter or file extension):
 
 +--------------------+---------------------------------------------+
