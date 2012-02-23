@@ -15,12 +15,12 @@ class CSVTransformer(base.Transformer):
         self.requires_size_limit = False
 
         if 'encoding' in self.query:
-            self.encoding = self.query["encoding"]
+            self.encoding = self.query["encoding"].value
         else:
             self.encoding = 'utf-8'
 
         if 'dialect' in self.query:
-            self.dialect = self.query["dialect"]
+            self.dialect = self.query["dialect"].value
         else:
             self.dialect = None
         
