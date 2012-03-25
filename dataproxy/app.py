@@ -236,7 +236,7 @@ class JsonpDataProxy(object):
         # Get resource type - first try to see whether there is type= URL option, 
         # if there is not, try to get it from file extension
         
-        if parts.scheme != 'http':
+        if parts.scheme not in ['http', 'https']:
             raise ResourceError('Only HTTP URLs are supported', 
                                 'Data proxy does not support %s URLs' % parts.scheme)
 
