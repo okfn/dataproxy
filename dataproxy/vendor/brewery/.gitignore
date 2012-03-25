@@ -1,0 +1,11 @@
+*.pyc
+*.swp
+*.egg-info/*
+sandbox/*
+.DS_Store
+build/*
+env/
+dist/
+*.tmproj
+doc/_build
+
