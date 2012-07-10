@@ -10,10 +10,10 @@ register_transformer({
         "extensions": ["xls"],
         "mime_types": ["application/excel", "application/vnd.ms-excel"]
     })
-    
+
 register_transformer({
         "name": "csv",
         "class": csv_transform.CSVTransformer,
-        "extensions": ["csv"],
+        "extensions": ["csv", "tsv"],
         "mime_types": ["text/csv", "text/comma-separated-values"]
     })

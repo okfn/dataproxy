@@ -3,13 +3,13 @@
 
 # Data sources
 # ============
-# 
+#
 # Should implement:
 # * fields
 # * prepare()
 # * rows() - returns iterable with value tuples
 # * records() - returns iterable with dictionaries of key-value pairs
-# 
+#
 # Data targets
 # ============
 # Should implement:
@@ -23,12 +23,15 @@
 import sys
 import urllib2
 import urlparse
+import logging
+
+log = logging.getLogger(__name__)
 
 datastore_dictionary = {}
 datastore_adapters = {}
 
 def datastore(description):
-    """Opens a datastore and returns datastore instance. If the datastore is relational database, 
+    """Opens a datastore and returns datastore instance. If the datastore is relational database,
     connection is created. The datastore description dictionary should contain adapter
     specific connection information.
 
@@ -71,16 +74,16 @@ def __datastore_adapter(adapter_name):
         adapter = sys.modules[module_name]
         datastore_adapters[adapter_name] = adapter
     return adapter
-    
+
 def fieldlist(fields):
     """Create a list of :class:`Field` objects from a list of strings, dictionaries or tuples
-    
+
     How fields are consutrcuted:
-        * string: `field name` is set 
+        * string: `field name` is set
         * tuple: (`field_name`, `storaget_type`, `analytical_type`), the `field_name` is obligatory,
             rest is optional
         * dict: contains key-value pairs for initializing a :class:`Field` object
-    
+
     For strings and in if not explicitly specified in a tuple or a dict case, then following rules
     apply:
         * `storage_type` is set to ``unknown``
@@ -114,21 +117,21 @@ def fieldlist(fields):
         else:
             raise ValueError("Unknown object type ('%s' ) of field description object '%s'" \
                                 % (type(obj), obj))
-        
+
         if "analytical_type" not in d:
             deftype = Field.default_analytical_types[d["storage_type"]]
             d["analytical_type"] = deftype
-        
+
         a_list.append(Field(**d))
     return list(a_list)
-    
+
 def open_resource(resource, mode = None):
     """Get file-like handle for a resource. Conversion:
-    
+
     * if resource is a string and it is not URL or it is file:// URL, then opens a file
     * if resource is URL then opens urllib2 handle
     * otherwise assume that resource is a file-like handle
-    
+
     Returns tuple: (handle, should_close) where `handle` is file-like object and `should_close` is
         a flag whether returned handle should be closed or not. Closed should be resources which
         where opened by this method, that is resources referenced by a string or URL.
@@ -150,7 +153,7 @@ def open_resource(resource, mode = None):
     else:
         handle = resource
     return (handle, should_close)
-    
+
 class Field(object):
     """Metadata - information about a field in a dataset or in a datastream.
 
@@ -166,8 +169,8 @@ class Field(object):
             dataset for given field
 
     **Storage types:**
-    
-        * `string` - names, labels, short descriptions; mostly implemeted as ``VARCHAR`` type in 
+
+        * `string` - names, labels, short descriptions; mostly implemeted as ``VARCHAR`` type in
             database, or can be found as CSV file fields
         * `text` - longer texts, long descriptions, articles
         * `integer` - discrete values
@@ -209,11 +212,11 @@ class Field(object):
             * `integer` is `discrete`
             * `float` is `range`
             * `unknown`, `string`, `text`, `date` are typeless
-        
+
     """
 
     storage_types = ["unknown", "string", "text", "integer", "float", "boolean", "date"]
-    analytical_types = ["default", "typeless", "flag", "discrete", "range", 
+    analytical_types = ["default", "typeless", "flag", "discrete", "range",
                         "set", "ordered_set"]
 
     default_analytical_type = {
@@ -225,7 +228,7 @@ class Field(object):
                     "date": "typeless"
                 }
 
-    def __init__(self, name, label = None, storage_type = "unknown", analytical_type = None, 
+    def __init__(self, name, label = None, storage_type = "unknown", analytical_type = None,
                     concrete_storage_type = None, missing_values = None):
         self.name = name
         self.label = label
@@ -246,15 +249,15 @@ class Field(object):
         d["concrete_storage_type"] = self.concrete_storage_type
         d["missing_values"] = self.missing_values
         return "<%s(%s)>" % (self.__class__, d)
-  
+
 class Datastore(object):
     """Object representing container such as relational database, document based collection, CSV
     file or directory with structured files
-    
+
     Functionality of a datastore is provided by datastore adapter.
-    
+
     Built-in adapters:
-    
+
     +----------------+------------------------------------------------+-----------------------------+
     | Adapter        | Description                                    | Parameter keys              |
     +================+================================================+=============================+
@@ -264,10 +267,10 @@ class Datastore(object):
     | mongodb        | Document based database - MongoDB_             | ``host``, ``port``,         |
     |                |                                                | ``database``                |
     +----------------+------------------------------------------------+-----------------------------+
-    
+
     .. _MongoDB: http://www.mongodb.org/
     .. _sqlalchemy: http://www.sqlalchemy.org/
-    
+
     """
     def __init__(self, arg):
         super(Datastore, self).__init__()
@@ -297,7 +300,7 @@ class Datastore(object):
 
     def create_dataset(self, name, fields, replace = False):
         """Create a new dataset
-        
+
         :Arguments:
             * `name`: new dataset name
             * `fields`: tuple (or a list) of :class:`Field` objects. For better field type accuracy
@@ -308,33 +311,33 @@ class Datastore(object):
 
     def destroy_dataset(self, name, checkfirst = False):
         """Destroy dataset in the receiving datastore.
-        
+
         :Arguments:
             - `name`: dataset name to be destroyed
             - `checkfirst`: if ``False`` and dataset does not exist an exception is raised. Set to ``True``
-                if you want to destroy dataset whether it exists or not (``checkfirst = True`` is 
+                if you want to destroy dataset whether it exists or not (``checkfirst = True`` is
                 equivalent to ``DROP TABLE IF EXISTS`` in SQL datastores)
         """
 
 class DataStream(object):
     """Shared methods for data targets and data sources"""
-    
+
     def initialize(self):
         """Delayed stream initialisation code. Subclasses might override this method to implement
         file or handle opening, connecting to a database, doing web authentication, ... By
         default this method does nothing.
-        
+
         The method does not take any arguments, it expects pre-configured object.
         """
         pass
 
     def finalize(self):
         """Subclasses might put finalisation code here, for example:
-        
+
         * closing a file stream
         * sending data over network
         * writing a chart image to a file
-        
+
         Default implementation does nothing.
         """
         pass
@@ -382,24 +385,24 @@ class DataTarget(DataStream):
     def append(self, object):
         """Append an object into dataset. Object can be a tuple, array or a dict object. If tuple
         or array is used, then value position should correspond to field position in the field list,
-        if dict is used, the keys should be valid field names.        
+        if dict is used, the keys should be valid field names.
         """
         raise NotImplementedError()
-     
+
 class Dataset(object):
     """Object representing a dataset in a datastore"""
 
     def truncate(self):
         """Remove all rows/records from the dataset."""
         raise NotImplementedError()
-    
+
     def append(self, object):
         """Append an object into dataset. Object can be a tuple, array or a dict object. If tuple
         or array is used, then value position should correspond to field position in the field list,
         if dict is used, the keys should be valid field names.
-        
+
         .. seealso:: :meth:`DataSource.append`
-        
+
         """
         raise NotImplementedError()
 
@@ -413,23 +416,23 @@ class Dataset(object):
         """Read field descriptions from dataset. You should use this for datasets that do not provide
         metadata directly, such as CSV files or document bases databases. Does nothing for relational
         databases, as fields are represented by table columns and table metadata can obtained from
-        database easily. 
-        
+        database easily.
+
         Note that this method can be quite costly, as by default all records within dataset are read
         and analysed.
-        
+
         After executing this method, dataset ``fields`` is set to the newly read field list.
-        
+
         :Arguments:
             - `limit`: read only specified number of records from dataset to guess field properties
-            
+
         Returns: tuple with Field objects. Order of fields is datastore adapter specific.
         """
 
     def rows(self):
         """Return iterable object with tuples.
-        
+
         .. seealso:: :meth:`DataSource.rows`
-        
+
         """
         return self.table.select().execute()

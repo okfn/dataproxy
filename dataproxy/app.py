@@ -27,7 +27,7 @@ http://someproxy.example.org/mount_point?url=url_encoded&sheet=1&range=A1:K3&doc
 
 Response format:
 
-header 
+header
     url = http://...file.xls
     option = 'row=5&row=7&row_range=10:100000:5000',
 response
@@ -50,7 +50,7 @@ Hurdles
 * Excel spreadhseets have formatting and different types => Ignore it, turn everything into a string for now
 * Some data sets are huge => don't proxy more than 100K of data - up to the user to filter it down if needed
 * We don't want to re-download data sets => Need a way to cache data -> storage API
-* Some applications might be wildly popular and put strain on the system -> perhaps API keys and rate limiting are needed so that individual apps/feeds can be disabled. How can we have read API keys on data.gov.uk? 
+* Some applications might be wildly popular and put strain on the system -> perhaps API keys and rate limiting are needed so that individual apps/feeds can be disabled. How can we have read API keys on data.gov.uk?
 """
 
 import csv
@@ -101,28 +101,28 @@ def get_resource_length(url, required = False, follow = False):
         raise ResourceError("Unable to access resource", "Unable to access resource. Reason: %s" % e)
 
     res = connection.getresponse()
-    
+
     headers = {}
     for header, value in res.getheaders():
         headers[header.lower()] = value
-    
+
     # Redirect?
     if res.status == 302 and follow:
         if "location" not in headers:
-            raise ResourceError("Resource moved, but no Location provided by resource server", 
-                                    'Resource %s moved, but no Location provided by resource server: %s' 
+            raise ResourceError("Resource moved, but no Location provided by resource server",
+                                    'Resource %s moved, but no Location provided by resource server: %s'
                                     % (parts.path, parts.netloc))
-            
+
         return get_resource_length(headers["location"], required = required, follow = False)
-        
+
 
     if 'content-length' in headers:
         length = int(headers['content-length'])
         return length
 
     if required:
-        raise ResourceError("Unable to get content length", 
-                                'No content-length returned for server: %s path: %s' 
+        raise ResourceError("Unable to get content length",
+                                'No content-length returned for server: %s path: %s'
                                 % (parts.netloc, parts.path))
     return None
 
@@ -147,7 +147,7 @@ class ProxyError(StandardError):
         self.title = title
         self.message = message
         self.error = "Error"
-        
+
 class ResourceError(ProxyError):
     def __init__(self, title, message):
         super(ResourceError, self).__init__(title, message)
@@ -211,33 +211,33 @@ class JsonpDataProxy(object):
         else:
             title = 'Unknown reply format'
             msg = 'Reply format %s is not supported, try json or jsonp' % format
-            flow.http_response.status = '200 Error %s' % title 
+            flow.http_response.status = '200 Error %s' % title
             return error(title=title, message=msg)
 
     def index(self, flow):
         if not flow.query.has_key('url'):
             title = 'url query parameter missing'
             msg = 'Please read the dataproxy API format documentation: http://democracyfarm.org/dataproxy/'
-            flow.http_response.status = '200 Error %s'%title 
+            flow.http_response.status = '200 Error %s'%title
             flow.http_response.body = error(title=title, message=msg)
         else:
             url = flow.query.getfirst('url')
-            
+
             try:
                 self.proxy_query(flow, url, flow.query)
             except ProxyError, e:
                 flow.http_response.status = '200 %s %s' % (e.error, e.title)
                 flow.http_response.body = error(title=e.title, message=e.message)
-                
+
 
     def proxy_query(self, flow, url, query):
         parts = urlparse.urlparse(url)
 
-        # Get resource type - first try to see whether there is type= URL option, 
+        # Get resource type - first try to see whether there is type= URL option,
         # if there is not, try to get it from file extension
-        
+
         if parts.scheme not in ['http', 'https']:
-            raise ResourceError('Only HTTP URLs are supported', 
+            raise ResourceError('Only HTTP URLs are supported',
                                 'Data proxy does not support %s URLs' % parts.scheme)
 
         resource_type = query.getfirst("type")
@@ -245,7 +245,7 @@ class JsonpDataProxy(object):
             resource_type = os.path.splitext(parts.path)[1]
 
         if not resource_type:
-            raise RequestError('Could not determine the resource type', 
+            raise RequestError('Could not determine the resource type',
                                 'If file has no type extension, specify file type in type= option')
 
         resource_type = re.sub(r'^\.', '', resource_type.lower())
@@ -253,13 +253,13 @@ class JsonpDataProxy(object):
         try:
             transformer = transform.transformer(resource_type, flow, url, query)
         except Exception, e:
-            raise RequestError('Resource type not supported', 
+            raise RequestError('Resource type not supported',
                                 'Transformation of resource of type %s is not supported. Reason: %s'
                                   % (resource_type, e))
         length = get_resource_length(url, transformer.requires_size_limit, follow = True)
 
         log.debug('The file at %s has length %s', url, length)
-        
+
         max_length = flow.app.config.proxy.max_length
 
         if length and transformer.requires_size_limit and length > max_length:
@@ -275,10 +275,10 @@ class JsonpDataProxy(object):
             raise ResourceError("Data Transformation Error",
                                 "Data transformation failed. Reason: %s" % e)
         indent=None
-        
+
         result["url"] = url
         result["length"] = length
-        
+
         if query.has_key('indent'):
             indent=int(query.getfirst('indent'))
 

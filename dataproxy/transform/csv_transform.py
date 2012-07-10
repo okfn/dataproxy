@@ -23,15 +23,20 @@ class CSVTransformer(base.Transformer):
             self.dialect = self.query["dialect"].value
         else:
             self.dialect = None
-        
+
     def transform(self):
         handle = urllib2.urlopen(self.url)
 
-        src = ds.CSVDataSource(handle, encoding = self.encoding, dialect = self.dialect)
+        separator = ','
+        if self.url.endswith('.tsv'):
+            separator = '\t'
+
+        src = ds.CSVDataSource(handle, encoding = self.encoding,
+                               dialect=self.dialect, separator=separator)
         src.initialize()
-        
+
         result = self.read_source_rows(src)
         handle.close()
-        
+
         return result
 
