@@ -1,5 +1,6 @@
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Data Proxy Demo</title>
   <link rel="stylesheet" href="http://assets.okfn.org/themes/witbd/typography.css" media="screen, print" title="Master stylesheet" charset="utf-8" />
   <link rel="stylesheet" href="https://bitbucket.org/okfn/ckan/raw/tip/ckan/public/css/forms.css" media="screen, print" title="Master stylesheet" charset="utf-8" />
@@ -14,7 +15,7 @@ var dataproxy = 'http://jsonpdataproxy.appspot.com';
 
 function getResourceId(url, callback) {
   // issue that this search works on partial matches of the url ...
-  apiurl = baseUrl + '/api/search/resource?url=' 
+  apiurl = baseUrl + '/api/search/resource?url='
   $.ajax({
     url: apiurl + url,
     dataType: 'jsonp',
@@ -22,7 +23,7 @@ function getResourceId(url, callback) {
   });
   function ourCallback(data) {
     if(data.count < 1) {
-      var msg = 'There is no resource with that url'; 
+      var msg = 'There is no resource with that url';
       alert(msg);
       throw msg;
     } else {
@@ -31,7 +32,7 @@ function getResourceId(url, callback) {
   }
 }
 function getResourceData(resourceId, callback) {
-  var apiurl = baseUrl + '/api/data/' 
+  var apiurl = baseUrl + '/api/data/'
   $.ajax({
     url: apiurl + resourceId,
     dataType: 'jsonp',
@@ -53,15 +54,15 @@ function showData(data) {
     throw 'Bad data';
   }
   var heading = $('#data h2 a');
-  heading.html(data.header.url);
-  heading.attr('href', data.header.url); 
-  $('#data h2 a').html(data.header.url);
+  heading.html(data.fields.url);
+  heading.attr('href', data.fields.url);
+  $('#data h2 a').html(data.fields.url);
   var content = $($('#data table').first());
   content.html('');
-  for (var i=0; i<data.response.length; i++) { 
+  for (var i=0; i<data.data.length; i++) {
     var row = $('<tr></tr>');
-    for (var j=0; j<data.response[i].length; j++) { 
-      row.append($('<td></td>').html(data.response[i][j]));
+    for (var j=0; j<data.data[i].length; j++) {
+      row.append($('<td></td>').html(data.data[i][j]));
     }
     content.append(row);
   }
