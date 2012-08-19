@@ -71,6 +71,8 @@ except ImportError:
 import sys
 import os
 
+REDIRECT_LIMIT = 20
+
 def _add_vendor_packages():
     root = os.path.join(os.path.dirname(__file__), 'vendor')
     for vendor_package in os.listdir(root):
@@ -88,7 +90,7 @@ from bn import AttributeDict
 
 log = logging.getLogger(__name__)
 
-def get_resource_length(url, required = False, follow = False):
+def get_resource_length(url, required = False, redirects = 0):
     """Get length of a resource"""
 
     parts = urlparse.urlparse(url)
@@ -107,13 +109,13 @@ def get_resource_length(url, required = False, follow = False):
         headers[header.lower()] = value
 
     # Redirect?
-    if res.status == 302 and follow:
+    if res.status == 302 and redirects < REDIRECT_LIMIT:
         if "location" not in headers:
             raise ResourceError("Resource moved, but no Location provided by resource server",
                                     'Resource %s moved, but no Location provided by resource server: %s'
                                     % (parts.path, parts.netloc))
 
-        return get_resource_length(headers["location"], required = required, follow = False)
+        return get_resource_length(headers["location"], required = required, redirects = redirects + 1)
 
 
     if 'content-length' in headers:
@@ -256,7 +258,7 @@ class JsonpDataProxy(object):
             raise RequestError('Resource type not supported',
                                 'Transformation of resource of type %s is not supported. Reason: %s'
                                   % (resource_type, e))
-        length = get_resource_length(url, transformer.requires_size_limit, follow = True)
+        length = get_resource_length(url, transformer.requires_size_limit)
 
         log.debug('The file at %s has length %s', url, length)
 
