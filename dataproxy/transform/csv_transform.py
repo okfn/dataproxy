@@ -30,7 +30,7 @@ class CSVTransformer(base.Transformer):
         if not self.dialect:
             if self.url.endswith('.tsv'):
                 self.dialect = 'excel-tab'
-            else
+            else:
                 self.dialect = 'excel'
 
         src = ds.CSVDataSource(handle, encoding = self.encoding, dialect=self.dialect)
