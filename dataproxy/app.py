@@ -271,9 +271,9 @@ class JsonpDataProxy(object):
         try:
             result = transformer.transform()
         except Exception, e:
-            log.debug('Transformation of %s failed. Reason: %s', url, e)
+            log.debug('Transformation of %s failed. %s: %s', url, e.__class__.__name__, e)
             raise ResourceError("Data Transformation Error",
-                                "Data transformation failed. Reason: %s" % e)
+                                "Data transformation failed. %s: %s" % (e.__class__.__name__, e))
         indent=None
 
         result["url"] = url
