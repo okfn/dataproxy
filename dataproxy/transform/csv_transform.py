@@ -27,12 +27,13 @@ class CSVTransformer(base.Transformer):
     def transform(self):
         handle = urllib2.urlopen(self.url)
 
-        separator = ','
-        if self.url.endswith('.tsv'):
-            separator = '\t'
+        if not self.dialect:
+            if self.url.endswith('.tsv'):
+                self.dialect = 'excel-tab'
+            else:
+                self.dialect = 'excel'
 
-        src = ds.CSVDataSource(handle, encoding = self.encoding,
-                               dialect=self.dialect, separator=separator)
+        src = ds.CSVDataSource(handle, encoding = self.encoding, dialect=self.dialect)
         src.initialize()
 
         result = self.read_source_rows(src)

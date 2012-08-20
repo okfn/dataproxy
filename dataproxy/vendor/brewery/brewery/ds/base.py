@@ -23,9 +23,6 @@
 import sys
 import urllib2
 import urlparse
-import logging
-
-log = logging.getLogger(__name__)
 
 datastore_dictionary = {}
 datastore_adapters = {}
