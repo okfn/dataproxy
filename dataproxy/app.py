@@ -255,7 +255,7 @@ def transform(type_name, flow, url, query):
         stream = urllib2.urlopen(url)
         records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
                 encoding=encoding)
-    elif type_name == 'xls':
+    elif type_name == 'xls' or type_name == 'xlsx':
         length = get_resource_length(url, True)
         # max_length = flow.app.config.proxy.max_length
         max_length = 5000000 # ~ 5Mb
@@ -270,7 +270,7 @@ def transform(type_name, flow, url, query):
             sheet_number = 1
         stream = urllib2.urlopen(url)
         records, metadata = dataconverters.xls.parse(stream,
-                worksheet=sheet_number)
+                excel_type=type_name, worksheet=sheet_number)
     else:
         raise Exception("Resource type not supported '%s'" % type_name)
     return (records, metadata)

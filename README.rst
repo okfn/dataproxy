@@ -10,9 +10,11 @@ Supported resource/file types (``type=`` parameter or file extension):
 +--------------------+---------------------------------------------+
 | Type               | Description                                 |
 +====================+=============================================+
-| csv                | Comma separated values text file|           |
+| csv                | Comma separated values text file            |
 +--------------------+---------------------------------------------+
-| xls                | Microsoft Excel Spreadsheet     |           |
+| xls                | Microsoft Excel Spreadsheet                 |
++--------------------+---------------------------------------------+
+| xlsx               | Microsoft Excel Spreadsheet (xlsx)          |
 +--------------------+---------------------------------------------+
 
 Supported reply format (``format=`` parameter) types:
@@ -55,7 +57,7 @@ Parameters
 |                    | ``jsonp`` are supported                    |
 +--------------------+--------------------------------------------+
 
-XLS Parameters:
+XLS(X) Parameters:
 
 +--------------------+--------------------------------------------+
 | Parameter          | Description                                |

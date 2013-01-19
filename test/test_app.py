@@ -28,6 +28,7 @@ class TestDataProxy(object):
                             },
                  "csv_json": "url=https://raw.github.com/datasets/cofog/master/data/cofog.csv&format=json",
                  "valid_xls": "url=http://oee.nrcan.gc.ca/corporate/statistics/neud/dpa/tablestrends2/id_ca_28_e.xls",
+                 "valid_xlsx": "url=https://github.com/okfn/dataconverters/raw/master/testdata/xls/simple.xlsx&format=json",
                  "untyped_csv": {
                         "url": "http://openeconomics.net/store/8d7d4770-e1d1-11db-9f7e-00145101c316/data",
                         "type": "csv"
@@ -90,6 +91,12 @@ class TestDataProxy(object):
     def test_tsv(self):
         res = self.get("valid_tsv")
         assert self.acceptable_response(res.body), res
+
+    def test_xlsx(self):
+        res = self.get("valid_xlsx")
+        assert self.acceptable_response(res.body), res
+        out = json.loads(res.body)
+        assert_equal(len(out['data']), 6)
 
     def test_redirect(self):
         res = self.get("redirect_csv")
