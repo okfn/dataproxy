@@ -17,8 +17,6 @@ except ImportError:
 import sys
 import os
 
-REDIRECT_LIMIT = 20
-
 def _add_vendor_packages():
     root = os.path.join(os.path.dirname(__file__), 'vendor')
     for vendor_package in os.listdir(root):
@@ -37,43 +35,6 @@ from bn import AttributeDict
 
 log = logging.getLogger(__name__)
 
-def get_resource_length(url, required = False, redirects = 0):
-    """Get length of a resource"""
-
-    parts = urlparse.urlparse(url)
-
-    connection = httplib.HTTPConnection(parts.netloc)
-
-    try:
-        connection.request("HEAD", parts.path)
-    except Exception, e:
-        raise ResourceError("Unable to access resource", "Unable to access resource. Reason: %s" % e)
-
-    res = connection.getresponse()
-
-    headers = {}
-    for header, value in res.getheaders():
-        headers[header.lower()] = value
-
-    # Redirect?
-    if res.status == 302 and redirects < REDIRECT_LIMIT:
-        if "location" not in headers:
-            raise ResourceError("Resource moved, but no Location provided by resource server",
-                                    'Resource %s moved, but no Location provided by resource server: %s'
-                                    % (parts.path, parts.netloc))
-
-        return get_resource_length(headers["location"], required = required, redirects = redirects + 1)
-
-
-    if 'content-length' in headers:
-        length = int(headers['content-length'])
-        return length
-
-    if required:
-        raise ResourceError("Unable to get content length",
-                                'No content-length returned for server: %s path: %s'
-                                % (parts.netloc, parts.path))
-    return None
 
 def render(**vars):
     return ["<html>\n"
@@ -256,7 +217,8 @@ def transform(type_name, flow, url, query):
         records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
                 encoding=encoding)
     elif type_name == 'xls' or type_name == 'xlsx':
-        length = get_resource_length(url, True)
+        stream = urllib2.urlopen(url)
+        length = int(stream.headers.get('content-length', 0))
         # max_length = flow.app.config.proxy.max_length
         max_length = 5000000 # ~ 5Mb
         if length and length > max_length:
@@ -268,7 +230,6 @@ def transform(type_name, flow, url, query):
             sheet_number = max(int(self.query.getfirst('worksheet')), 1)
         else:
             sheet_number = 1
-        stream = urllib2.urlopen(url)
         records, metadata = dataconverters.xls.parse(stream,
                 excel_type=type_name, worksheet=sheet_number)
     else:
