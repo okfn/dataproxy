@@ -1,0 +1,12 @@
+[submodule "dataproxy/messytables"]
+	path = dataproxy/messytables
+	url = git://github.com/okfn/messytables.git
+[submodule "dataproxy/vendor/dataconverters"]
+	path = dataproxy/vendor/dataconverters
+	url = git://github.com/okfn/dataconverters.git
+[submodule "dataproxy/vendor/messytables"]
+	path = dataproxy/vendor/messytables
+	url = git://github.com/okfn/messytables.git
+[submodule "dataproxy/vendor/chardet"]
+	path = dataproxy/vendor/chardet
+	url = git://github.com/erikrose/chardet.git

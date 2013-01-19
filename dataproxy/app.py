@@ -84,7 +84,8 @@ def _add_vendor_packages():
 
 _add_vendor_packages()
 
-import transform
+import dataconverters.csv
+import dataconverters.xls
 
 from bn import AttributeDict
 
@@ -253,38 +254,70 @@ class JsonpDataProxy(object):
         resource_type = re.sub(r'^\.', '', resource_type.lower())
 
         try:
-            transformer = transform.transformer(resource_type, flow, url, query)
+            records, metadata = transform(resource_type, flow, url, query)
         except Exception, e:
-            raise RequestError('Resource type not supported',
-                                'Transformation of resource of type %s is not supported. Reason: %s'
-                                  % (resource_type, e))
-        length = get_resource_length(url, transformer.requires_size_limit)
+            log.debug('Transformation of %s failed. %s: %s', url, e.__class__.__name__, e)
+            raise ResourceError("Data Transformation Error",
+                                "Data transformation failed. %s: %s" % (e.__class__.__name__, e))
 
-        log.debug('The file at %s has length %s', url, length)
+        max_results = 500
+        if "max-results" in query:
+            try:
+                max_results = int(query.getfirst("max-results"))
+            except:
+                raise ValueError("max-results should be an integer")
 
-        max_length = flow.app.config.proxy.max_length
+        fields = [ f['id'] for f in metadata['fields'] ]
+        data = []
+        for count, r in enumerate(records):
+            if count >= max_results:
+                break
+            data.append([ r[field] for field in fields ])
 
-        if length and transformer.requires_size_limit and length > max_length:
+        result = {
+            'url': url,
+            'data': data,
+            'metadata': metadata,
+            'fields': fields
+        }
+
+        if query.has_key('indent'):
+            indent=int(query.getfirst('indent'))
+        else:
+            indent=None
+
+        flow.http_response.body = json.dumps(result, indent=indent,
+                cls=DateEncoder)
+
+
+import datetime
+class DateEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+
+        return json.JSONEncoder.default(self, obj)
+
+def transform(type_name, flow, url, query):
+    if type_name == 'csv':
+        stream = urllib2.urlopen(url)
+        records, metadata = dataconverters.csv.parse(stream)
+    elif type_name == 'xls':
+        length = get_resource_length(url, True)
+        # max_length = flow.app.config.proxy.max_length
+        max_length = 5000000 # ~ 5Mb
+        if length and length > max_length:
             raise ResourceError('The requested file is too big to proxy',
                                 'Requested resource is %s bytes. Size limit is %s. '
                                 'If we proxy large files we\'ll use up all our bandwidth'
                                 % (length, max_length))
 
-        try:
-            result = transformer.transform()
-        except Exception, e:
-            log.debug('Transformation of %s failed. %s: %s', url, e.__class__.__name__, e)
-            raise ResourceError("Data Transformation Error",
-                                "Data transformation failed. %s: %s" % (e.__class__.__name__, e))
-        indent=None
+        stream = urllib2.urlopen(url)
+        records, metadata = dataconverters.xls.parse(stream)
+    else:
+        raise Exception("Resource type not supported '%s'" % type_name)
+    return (records, metadata)
 
-        result["url"] = url
-        result["length"] = length
-
-        if query.has_key('indent'):
-            indent=int(query.getfirst('indent'))
-
-        flow.http_response.body = json.dumps(result, indent=indent)
 
 if __name__ == '__main__':
     from wsgiref.util import setup_testing_defaults

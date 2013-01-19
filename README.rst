@@ -159,6 +159,20 @@ Errors
 +----------------------------------------+----------------------------------------------------+
 
 
+Install (Local)
++++++++++++++++
+
+Get the repo::
+
+    git clone https://github.com/okfn/dataproxy
+
+Install the submodules (we use submodules or downloaded libraries rather than
+requirements file as we need to deploy to app engine)::
+
+    git submobule init
+    git submodule update
+
+
 Deployment
 ++++++++++
 
