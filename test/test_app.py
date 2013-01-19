@@ -4,6 +4,7 @@ import re
 import json
 import os
 import sys
+from nose.tools import assert_equal
 
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'dataproxy'))
 
@@ -19,13 +20,13 @@ class TestDataProxy(object):
         self.requests = {
                 "no_type": "url=http://foo.com/foo",
                  "unknown_type": "url=http://foo.com/foo.undefined",
-                 "valid_csv": "url=https://commondatastorage.googleapis.com/ckannet-storage/2011-11-24T112025/AfTerFibre_21nov2011.csv",
+                 "valid_csv": "url=https://raw.github.com/datasets/cofog/master/data/cofog.csv",
                  "valid_csv_limit": {
-                            "url": "https://commondatastorage.googleapis.com/ckannet-storage/2011-11-24T112025/AfTerFibre_21nov2011.csv",
+                     "url": "https://raw.github.com/datasets/cofog/master/data/cofog.csv",
                             "max-results": 3,
                             "format": "json"
                             },
-                 "csv_json": "url=https://commondatastorage.googleapis.com/ckannet-storage/2011-11-24T112025/AfTerFibre_21nov2011.csv&format=json",
+                 "csv_json": "url=https://raw.github.com/datasets/cofog/master/data/cofog.csv&format=json",
                  "valid_xls": "url=http://oee.nrcan.gc.ca/corporate/statistics/neud/dpa/tablestrends2/id_ca_28_e.xls",
                  "untyped_csv": {
                         "url": "http://openeconomics.net/store/8d7d4770-e1d1-11db-9f7e-00145101c316/data",
@@ -94,4 +95,4 @@ class TestDataProxy(object):
         assert self.acceptable_response(res.body), res
         jres = json.loads(res.body)
         rows = jres["data"]
-        assert len(rows) == 3, res
+        assert_equal(len(rows), 3)
