@@ -1,7 +1,9 @@
-application: jsonpdataproxy
+application: jsonpdataproxy-hrd
 version: 4
-runtime: python
+runtime: python27
 api_version: 1
+# we are using CGI atm so can only have threadsafe=false
+threadsafe: false
 
 handlers:
 - url: /static

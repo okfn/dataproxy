@@ -167,10 +167,15 @@ requirements file as we need to deploy to app engine)::
 Deployment
 ++++++++++
 
-This is a Python google app engine application. Deploy in the usual way.
+This is a Python google app engine application. We deploy in the usual way.
+Specifically, 
 
 
-.. _csv.register_dialect(): http://docs.python.org/library/csv.html#csv.register_dialect
+    # ./google_appengine is the location of your python SDK
+    # if this is somewhere else amend the pathes accordingly
+    cd ./google_appengine
+    # now deploy
+    ./appcfg.py update ../dataproxy/
 
 
 Developer Notes
