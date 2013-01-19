@@ -1,59 +1,5 @@
 """Data Proxy: a google app-engine application for proxying data to json (jsonp) format.
-
-Author: James Gardner <http://jimmyg.org>
-Author: Stefan Urbanek <stefan.urbanek@gmail.com>
-
-Transformation modules
-======================
-
-For each resource type there should be a module in transform/<type>_transform.py
-
-Each module should implement:
-* ``transformer(flow, url, query)``, should return a Transformer subclass
-* Transformer subclass with __init__(flow, url, query)
-
-Existing modules:
-* transform/csv_transform - CSV files
-* transform/xls_transform - Excel XLS files
-
-
-Random notes
-============
-
-Mount point
-Maximum file size
-
-http://someproxy.example.org/mount_point?url=url_encoded&sheet=1&range=A1:K3&doc=no&indent=4&format=jsonp
-
-Response format:
-
-header
-    url = http://...file.xls
-    option = 'row=5&row=7&row_range=10:100000:5000',
-response
-    sheet = 'Sheet 1',
-    data = [
-        [...],
-        [...],
-        [...],
-    ]
-
-* Downloading the entire spreadsheet
-* Downloading a single sheet (add ``sheet=1`` to the URL)
-* Downloading a range in a single sheet (add ``range=A1:K3`` to the URL) [a bit nasty for CSV files but will do I think]
-* Choosing a limited set of rows within the sheet (add ``row=5&row=7&row_range=10:100000:5000`` - rowrange format would be give me a row between 10 and 100000 every 5000 rows)
-
-
-Hurdles
--------
-* Some data sets are not in text-based formats => Don't handle them at this stage
-* Excel spreadhseets have formatting and different types => Ignore it, turn everything into a string for now
-* Some data sets are huge => don't proxy more than 100K of data - up to the user to filter it down if needed
-* We don't want to re-download data sets => Need a way to cache data -> storage API
-* Some applications might be wildly popular and put strain on the system -> perhaps API keys and rate limiting are needed so that individual apps/feeds can be disabled. How can we have read API keys on data.gov.uk?
 """
-
-import csv
 import os
 import logging
 import httplib

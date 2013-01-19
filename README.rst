@@ -181,3 +181,20 @@ This is a Python google app engine application. Deploy in the usual way.
 
 .. _csv.register_dialect(): http://docs.python.org/library/csv.html#csv.register_dialect
 
+
+Developer Notes
++++++++++++++++
+
+Things we could support in future
+=================================
+
+* Downloading a range in a single sheet (add ``range=A1:K3`` to the URL) [a bit nasty for CSV files but will do I think]
+* Choosing a limited set of rows within the sheet (add ``row=5&row=7&row_range=10:100000:5000`` - rowrange format would be give me a row between 10 and 100000 every 5000 rows)
+
+Possible challenges
+===================
+
+* Some data sets are not in text-based formats => Don't handle them at this stage
+* Some data sets are huge => don't proxy more than 100K of data - up to the user to filter it down if needed
+* Some applications might be wildly popular and put strain on the system -> perhaps API keys and rate limiting are needed so that individual apps/feeds can be disabled.
+
