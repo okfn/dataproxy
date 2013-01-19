@@ -32,7 +32,8 @@ class TestDataProxy(object):
                         "url": "http://openeconomics.net/store/8d7d4770-e1d1-11db-9f7e-00145101c316/data",
                         "type": "csv"
                     },
-                 "redirect_csv": "url=http://www.archive.org/download/ckan-cofog/cofog.csv"
+                 "redirect_csv": "url=http://www.archive.org/download/ckan-cofog/cofog.csv",
+                 "valid_tsv": "url=https://raw.github.com/okfn/dataconverters/master/testdata/tsv/simple.tsv"
                 }
     def get(self, request_name):
         request = self.requests[request_name]
@@ -85,6 +86,10 @@ class TestDataProxy(object):
         jres = json.loads(res.body)
         assert 'data' in jres
         assert 'url' in jres
+
+    def test_tsv(self):
+        res = self.get("valid_tsv")
+        assert self.acceptable_response(res.body), res
 
     def test_redirect(self):
         res = self.get("redirect_csv")

@@ -70,17 +70,6 @@ CSV Parameters:
 +====================+============================================+
 | ``encoding``       | Source character encoding.                 |
 +--------------------+--------------------------------------------+
-| ``dialect``        | Can be used to change the set of parameters|
-|                    | specific to a particular CSV dialect used  |
-|                    | to read data out of the file.              |
-|                    | By default only ``excel`` and ``excel-tab``|
-|                    | are supported.                             |
-|                    |                                            |
-|                    | More dialects can be added modifying the   |
-|                    | source code, with the use of               |
-|                    | `csv.register_dialect()`_ .                |
-+--------------------+--------------------------------------------+
-
 
 
 Get whole file as json::

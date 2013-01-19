@@ -245,9 +245,16 @@ class DateEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def transform(type_name, flow, url, query):
+    encoding = None
+    if 'encoding' in query:
+        encoding = query["encoding"].value
     if type_name == 'csv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream)
+        records, metadata = dataconverters.csv.parse(stream, encoding=encoding)
+    elif type_name == 'tsv':
+        stream = urllib2.urlopen(url)
+        records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
+                encoding=encoding)
     elif type_name == 'xls':
         length = get_resource_length(url, True)
         # max_length = flow.app.config.proxy.max_length
