@@ -21,6 +21,7 @@ class TestDataProxy(object):
                 "no_type": "url=http://foo.com/foo",
                  "unknown_type": "url=http://foo.com/foo.undefined",
                  "valid_csv": "url=https://raw.github.com/datasets/cofog/master/data/cofog.csv",
+                 "valid_csv_with_decimal": "url=https://raw.github.com/datasets/gold-prices/master/data/data.csv",
                  "valid_csv_limit": {
                      "url": "https://raw.github.com/datasets/cofog/master/data/cofog.csv",
                             "max-results": 3,
@@ -97,6 +98,10 @@ class TestDataProxy(object):
         assert self.acceptable_response(res.body), res
         out = json.loads(res.body)
         assert_equal(len(out['data']), 6)
+
+    def test_decimal(self):
+        res = self.get("valid_csv_with_decimal")
+        assert self.acceptable_response(res.body), res
 
     def test_redirect(self):
         res = self.get("redirect_csv")

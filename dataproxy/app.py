@@ -194,16 +194,19 @@ class JsonpDataProxy(object):
             indent=None
 
         flow.http_response.body = json.dumps(result, indent=indent,
-                cls=DateEncoder)
+                cls=OurEncoder)
 
 
 import datetime
-class DateEncoder(json.JSONEncoder):
+import decimal
+class OurEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return obj.isoformat()
-
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
         return json.JSONEncoder.default(self, obj)
+
 
 def transform(type_name, flow, url, query):
     encoding = None
