@@ -60,7 +60,7 @@ XLS Parameters:
 +--------------------+--------------------------------------------+
 | Parameter          | Description                                |
 +====================+============================================+
-| ``worksheet``      | Worksheet number                           |
+| ``worksheet``      | Worksheet number (first sheet is 1, etc)   |
 +--------------------+--------------------------------------------+
 
 CSV Parameters:

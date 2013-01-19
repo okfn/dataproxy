@@ -264,9 +264,13 @@ def transform(type_name, flow, url, query):
                                 'Requested resource is %s bytes. Size limit is %s. '
                                 'If we proxy large files we\'ll use up all our bandwidth'
                                 % (length, max_length))
-
+        if 'worksheet' in query:
+            sheet_number = max(int(self.query.getfirst('worksheet')), 1)
+        else:
+            sheet_number = 1
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.xls.parse(stream)
+        records, metadata = dataconverters.xls.parse(stream,
+                worksheet=sheet_number)
     else:
         raise Exception("Resource type not supported '%s'" % type_name)
     return (records, metadata)
