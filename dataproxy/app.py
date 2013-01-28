@@ -96,7 +96,10 @@ class JsonpDataProxy(object):
         flow['app']['config']['proxy'] = AttributeDict(max_length=int(self.max_length))
         flow['environ'] = environ
         flow['http_response'] = HTTPResponseMarble()
-        flow.http_response.header_list = [dict(name='Content-Type', value='application/javascript')]
+        flow.http_response.header_list = [
+            dict(name='Content-Type', value='application/javascript'),
+            dict(name='Access-Control-Allow-Origin', value='*')
+            ]
         flow['query'] = FieldStorage(environ=flow.environ)
 
         self.index(flow)
