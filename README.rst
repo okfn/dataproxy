@@ -81,20 +81,28 @@ Get whole file as json::
 result::
 
     {
-       "response" : [
-          [ "name","type","amount" ],
-          [ "apple","fruit",10 ],
-          [ "bananna","fruit",20 ],
-          [ "carrot","vegetable",30 ],
-          [ "blueberry","fruit", 40 ],
-          [ "potato","vegetable",50 ],
-          [ "onion","vegetable",60 ],
-          [ "garlic","vegetable",70 ],
-          [ "orange","vegetable",80 ]
-       ],
-       "header" : {
-          "url" : "http://democracyfarm.org/f/ckan/foo.csv",
-       }
+      "data" : [
+        [ "first-value", "second-value", "third-value" ],
+        ...
+      ],
+      "url" : "http://democracyfarm.org/f/ckan/foo.csv",
+      // backwards compatibility - will be deprecated at some point - use metadata
+      "fields": [
+        "first-field-id",
+        "second-field-id",
+        ...
+      ],
+      "metadata": {
+        "fields": [
+          // follows http://www.dataprotocols.org/en/latest/json-table-schema.html
+          {
+            "id": "field-name",
+            // if we guess types ...
+            "type": "type-name"
+          },
+          ...
+        ]
+      }
     }
 
 
