@@ -213,15 +213,17 @@ class OurEncoder(json.JSONEncoder):
 
 def transform(type_name, flow, url, query):
     encoding = None
+    guess_types = ("guess-types" in query)
     if 'encoding' in query:
         encoding = query["encoding"].value
     if type_name == 'csv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream, encoding=encoding)
+        records, metadata = dataconverters.csv.parse(stream, encoding=encoding,
+                guess_types=guess_types)
     elif type_name == 'tsv':
         stream = urllib2.urlopen(url)
         records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
-                encoding=encoding)
+                encoding=encoding, guess_types=guess_types)
     elif type_name == 'xls' or type_name == 'xlsx':
         stream = urllib2.urlopen(url)
         length = int(stream.headers.get('content-length', 0))
@@ -237,7 +239,8 @@ def transform(type_name, flow, url, query):
         else:
             sheet_number = 1
         records, metadata = dataconverters.xls.parse(stream,
-                excel_type=type_name, worksheet=sheet_number)
+                excel_type=type_name, worksheet=sheet_number,
+                guess_types=guess_types)
     else:
         raise Exception("Resource type not supported '%s'" % type_name)
     return (records, metadata)

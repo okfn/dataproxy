@@ -56,6 +56,10 @@ Parameters
 | ``format``         | Output format. Currently ``json`` and      |
 |                    | ``jsonp`` are supported                    |
 +--------------------+--------------------------------------------+
+| ``guess-types``    | If set attempt to do type guessing on      |
+|                    | source data return the guessed type in     |
+|                    | metadata and using the type to cast data   |
++--------------------+--------------------------------------------+
 
 XLS(X) Parameters:
 
