@@ -235,7 +235,7 @@ def transform(type_name, flow, url, query):
                                 'If we proxy large files we\'ll use up all our bandwidth'
                                 % (length, max_length))
         if 'worksheet' in query:
-            sheet_number = max(int(self.query.getfirst('worksheet')), 1)
+            sheet_number = max(int(query.getfirst('worksheet')), 1)
         else:
             sheet_number = 1
         records, metadata = dataconverters.xls.parse(stream,
