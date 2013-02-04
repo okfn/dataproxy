@@ -28,7 +28,7 @@ def _add_vendor_packages():
 
 _add_vendor_packages()
 
-import dataconverters.csv
+import dataconverters.commas
 import dataconverters.xls
 
 from bn import AttributeDict
@@ -220,11 +220,11 @@ def transform(type_name, flow, url, query, max_results):
         encoding = query["encoding"].value
     if type_name == 'csv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream, encoding=encoding,
+        records, metadata = dataconverters.commas.parse(stream, encoding=encoding,
                 window=window, guess_types=guess_types)
     elif type_name == 'tsv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
+        records, metadata = dataconverters.commas.parse(stream, delimiter='\t',
                 encoding=encoding, window=window, guess_types=guess_types)
     elif type_name == 'xls' or type_name == 'xlsx':
         stream = urllib2.urlopen(url)
