@@ -28,7 +28,7 @@ def _add_vendor_packages():
 
 _add_vendor_packages()
 
-import dataconverters.csv
+import dataconverters.commas
 import dataconverters.xls
 
 from bn import AttributeDict
@@ -163,19 +163,19 @@ class JsonpDataProxy(object):
 
         resource_type = re.sub(r'^\.', '', resource_type.lower())
 
-        try:
-            records, metadata = transform(resource_type, flow, url, query)
-        except Exception, e:
-            log.debug('Transformation of %s failed. %s: %s', url, e.__class__.__name__, e)
-            raise ResourceError("Data Transformation Error",
-                                "Data transformation failed. %s: %s" % (e.__class__.__name__, e))
-
         max_results = 500
         if "max-results" in query:
             try:
                 max_results = int(query.getfirst("max-results"))
             except:
                 raise ValueError("max-results should be an integer")
+
+        try:
+            records, metadata = transform(resource_type, flow, url, query, max_results)
+        except Exception, e:
+            log.debug('Transformation of %s failed. %s: %s', url, e.__class__.__name__, e)
+            raise ResourceError("Data Transformation Error",
+                                "Data transformation failed. %s: %s" % (e.__class__.__name__, e))
 
         fields = [ f['id'] for f in metadata['fields'] ]
         data = []
@@ -211,19 +211,21 @@ class OurEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def transform(type_name, flow, url, query):
+def transform(type_name, flow, url, query, max_results):
+    # window size is the number of rows that are pre-fetched and analysed
+    window = min(max_results, 256)
     encoding = None
     guess_types = ("guess-types" in query)
     if 'encoding' in query:
         encoding = query["encoding"].value
     if type_name == 'csv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream, encoding=encoding,
-                guess_types=guess_types)
+        records, metadata = dataconverters.commas.parse(stream, encoding=encoding,
+                window=window, guess_types=guess_types)
     elif type_name == 'tsv':
         stream = urllib2.urlopen(url)
-        records, metadata = dataconverters.csv.parse(stream, delimiter='\t',
-                encoding=encoding, guess_types=guess_types)
+        records, metadata = dataconverters.commas.parse(stream, delimiter='\t',
+                encoding=encoding, window=window, guess_types=guess_types)
     elif type_name == 'xls' or type_name == 'xlsx':
         stream = urllib2.urlopen(url)
         length = int(stream.headers.get('content-length', 0))
@@ -254,5 +256,3 @@ if __name__ == '__main__':
     httpd = make_server('', 8000, JsonpDataProxy(100000))
     print "Serving on port 8000..."
     httpd.serve_forever()
-
-
