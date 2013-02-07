@@ -217,7 +217,7 @@ def transform(type_name, flow, url, query, max_results):
     encoding = None
     guess_types = True
     if 'guess-types' in query:
-        guess_types = query["guess-types"].lower() in ['true', '1', 'enabled']
+        guess_types = query['guess-types'].lower() in ('yes', 'true', '1', 't', 'enabled')
     if 'encoding' in query:
         encoding = query["encoding"].value
     if type_name == 'csv':
