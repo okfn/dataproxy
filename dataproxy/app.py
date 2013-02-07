@@ -215,7 +215,9 @@ def transform(type_name, flow, url, query, max_results):
     # window size is the number of rows that are pre-fetched and analysed
     window = min(max_results, 256)
     encoding = None
-    guess_types = ("guess-types" in query)
+    guess_types = True
+    if 'guess-types' in query:
+        guess_types = query["guess-types"].lower() in ['true', '1', 'enabled']
     if 'encoding' in query:
         encoding = query["encoding"].value
     if type_name == 'csv':
