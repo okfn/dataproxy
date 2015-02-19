@@ -1,6 +1,12 @@
 Data Proxy
 ++++++++++
 
+**Note for CKAN users**: The DataProxy is not actively maintained. Users looking for a structured API for tabular data
+and robust visualizations should use the CKAN DataStore_
+
+.. _DataStore: http://docs.ckan.org/en/latest/maintaining/datastore.html
+
+
 Data Proxy is a web service for converting data resources into structured form such as json.
 
 .. image:: http://packages.python.org/dataproxy/_images/data_proxy.png
